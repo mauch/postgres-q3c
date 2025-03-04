@@ -1,13 +1,13 @@
-FROM postgres:latest AS builder
+FROM postgres:17 AS builder
 RUN mkdir /build
 WORKDIR /build
 RUN apt-get update && apt-get install -y build-essential postgresql-server-dev-all git libssl-dev zlib1g-dev libreadline-dev liblz4-dev libzstd-dev
 RUN git clone https://github.com/segasai/q3c.git
 WORKDIR /build/q3c
 RUN make
-RUN /usr/lib/llvm-16/bin/llvm-lto -thinlto -thinlto-action=thinlink -o q3c.index.bc dump.bc q3c.bc q3c_poly.bc q3cube.bc
+RUN /usr/lib/llvm-19/bin/llvm-lto -thinlto -thinlto-action=thinlink -o q3c.index.bc dump.bc q3c.bc q3c_poly.bc q3cube.bc
 
-FROM postgres:latest
+FROM postgres:17
 LABEL org.opencontainers.image.source https://github.com/mauch/postgres-q3c
 RUN mkdir -p /usr/share/doc/postgresql-doc-17/extension /usr/lib/postgresql/17/lib/bitcode/q3c
 COPY --from=builder /build/q3c/q3c.so /usr/lib/postgresql/17/lib/q3c.so
